@@ -4,6 +4,9 @@ import android.app.Activity;
 import android.graphics.Bitmap;
 import android.text.TextUtils;
 import android.util.Log;
+
+import androidx.annotation.NonNull;
+
 import com.mob.MobSDK;
 import com.mob.OperationCallback;
 import com.mob.PrivacyPolicy;
@@ -31,11 +34,15 @@ import io.flutter.plugin.common.MethodChannel.MethodCallHandler;
 import io.flutter.plugin.common.MethodChannel.Result;
 import io.flutter.plugin.common.EventChannel;
 import io.flutter.plugin.common.PluginRegistry;
+import io.flutter.embedding.engine.plugins.FlutterPlugin;
+import io.flutter.embedding.engine.plugins.activity.ActivityAware;
+import io.flutter.plugin.common.EventChannel;
+import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding;
 
 /**
  * SharesdkPlugin
  */
-public class SharesdkPlugin implements MethodCallHandler {
+public class SharesdkPlugin implements MethodCallHandler,FlutterPlugin, ActivityAware,EventChannel.StreamHandler {
 
   private static final String PluginMethodGetVersion = "getVersion";
   private static final String PluginMethodShare = "share";
@@ -62,19 +69,14 @@ public class SharesdkPlugin implements MethodCallHandler {
   public static int IS_ALIVE = 123;
 
   private static final String TAG = "SHARESDK";
+  private MethodChannel channel;
 
 
-  /**
-   * Plugin registration.
-   */
-  public static void registerWith(PluginRegistry.Registrar registrar) {
-    activity = registrar.activity();
-
-    final MethodChannel channel = new MethodChannel(registrar.messenger(),
-        "com.yoozoo.mob/sharesdk");
-    channel.setMethodCallHandler(new SharesdkPlugin());
-
-    eventChannel = new EventChannel(registrar.messenger(), EVENTCHANNEL);
+  @Override
+  public void onAttachedToEngine(@NonNull FlutterPluginBinding flutterPluginBinding) {
+    channel = new MethodChannel(flutterPluginBinding.getBinaryMessenger(), "com.yoozoo.mob/sharesdk");
+    channel.setMethodCallHandler(this);
+    eventChannel = new EventChannel(flutterPluginBinding.getBinaryMessenger(), EVENTCHANNEL);
     eventChannel.setStreamHandler(new EventChannel.StreamHandler() {
 
       @Override
@@ -109,8 +111,7 @@ public class SharesdkPlugin implements MethodCallHandler {
         Log.e("WWW", " onCancel " + " Object " + o);
       }
     });
-
-    //setChannelId
+//setChannelId
     MobSDK.setChannel(new SHARESDK(), MobSDK.CHANNEL_FLUTTER);
 
     /**
@@ -149,11 +150,11 @@ public class SharesdkPlugin implements MethodCallHandler {
       }
     });
     Log.e("WWW", " ShareSDK.prepareLoopShare() successed ");
-
   }
 
+
   @Override
-  public void onMethodCall(MethodCall call, Result result) {
+  public void onMethodCall(@NonNull MethodCall call, @NonNull Result result) {
     switch (call.method) {
       case PluginMethodGetVersion:
         getVersion(call, result);
@@ -203,7 +204,40 @@ public class SharesdkPlugin implements MethodCallHandler {
     }
   }
 
+  @Override
+  public void onDetachedFromEngine(@NonNull FlutterPluginBinding binding) {
+    channel.setMethodCallHandler(null);
+  }
 
+
+  @Override
+  public void onAttachedToActivity(@NonNull ActivityPluginBinding binding) {
+    activity = binding.getActivity();
+  }
+
+  @Override
+  public void onDetachedFromActivityForConfigChanges() {
+
+  }
+
+  @Override
+  public void onReattachedToActivityForConfigChanges(@NonNull ActivityPluginBinding binding) {
+
+  }
+
+  @Override
+  public void onDetachedFromActivity() {
+
+  }
+
+  @Override
+  public void onListen(Object arguments, EventChannel.EventSink events) {
+  }
+
+  @Override
+  public void onCancel(Object arguments) {
+
+  }
 
   private void submitPrivacyGrantResult(MethodCall call, final Result result) {
     Log.e("qqq", "====> submitPrivacyGrantResult");
