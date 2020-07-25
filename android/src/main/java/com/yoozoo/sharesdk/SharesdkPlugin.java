@@ -77,40 +77,7 @@ public class SharesdkPlugin implements MethodCallHandler,FlutterPlugin, Activity
     channel = new MethodChannel(flutterPluginBinding.getBinaryMessenger(), "com.yoozoo.mob/sharesdk");
     channel.setMethodCallHandler(this);
     eventChannel = new EventChannel(flutterPluginBinding.getBinaryMessenger(), EVENTCHANNEL);
-    eventChannel.setStreamHandler(new EventChannel.StreamHandler() {
-
-      @Override
-      public void onListen(Object o, EventChannel.EventSink eventSink) {
-        if (eventSink != null) {
-          outerEventSink = eventSink;
-          if (IS_ALIVE != 123) {
-            try {
-              HashMap<String, Object> resMap = ShareSDK.getCustomDataFromLoopShare();
-
-              HashMap<String, Object> fedbackMap = new HashMap<>();
-              if (resMap.containsKey("path")) {
-                fedbackMap.put("path", resMap.get("path"));
-              }
-              fedbackMap.put("params", resMap);
-              outerEventSink.success(fedbackMap);
-            } catch (Throwable t) {
-              Log.e("www", " catch====> " + t);
-            }
-
-            IS_ALIVE = 123;
-          }
-          Log.e("WWW", "onListen ===> outerEventSink " + outerEventSink);
-        } else {
-          Log.e("WWW", "onListen ===> eventSink is null ");
-        }
-
-      }
-
-      @Override
-      public void onCancel(Object o) {
-        Log.e("WWW", " onCancel " + " Object " + o);
-      }
-    });
+    eventChannel.setStreamHandler(this);
 //setChannelId
     MobSDK.setChannel(new SHARESDK(), MobSDK.CHANNEL_FLUTTER);
 
@@ -231,7 +198,29 @@ public class SharesdkPlugin implements MethodCallHandler,FlutterPlugin, Activity
   }
 
   @Override
-  public void onListen(Object arguments, EventChannel.EventSink events) {
+  public void onListen(Object arguments, EventChannel.EventSink eventSink) {
+    if (eventSink != null) {
+      outerEventSink = eventSink;
+      if (IS_ALIVE != 123) {
+        try {
+          HashMap<String, Object> resMap = ShareSDK.getCustomDataFromLoopShare();
+
+          HashMap<String, Object> fedbackMap = new HashMap<>();
+          if (resMap.containsKey("path")) {
+            fedbackMap.put("path", resMap.get("path"));
+          }
+          fedbackMap.put("params", resMap);
+          outerEventSink.success(fedbackMap);
+        } catch (Throwable t) {
+          Log.e("www", " catch====> " + t);
+        }
+
+        IS_ALIVE = 123;
+      }
+      Log.e("WWW", "onListen ===> outerEventSink " + outerEventSink);
+    } else {
+      Log.e("WWW", "onListen ===> eventSink is null ");
+    }
   }
 
   @Override
